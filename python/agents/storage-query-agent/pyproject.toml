@@ -1,0 +1,14 @@
+[project]
+name = "storage-query-agent"
+version = "0.1.0"
+description = "Conversational agent for querying storage systems and computer servers"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "google-adk>=1.13.0",
+    "google-genai>=1.17.0",
+    "python-dotenv>=1.1.0",
+]
+
+[tool.agent-starter-pack.settings]
+deployment_targets = ["agent_engine", "cloud_run"]
