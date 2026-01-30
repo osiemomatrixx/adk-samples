@@ -30,7 +30,7 @@ def list_files(directory_path: str = ".") -> str:
         A formatted string containing the list of files and directories.
     """
     try:
-        base_path = os.getenv("STORAGE_BASE_PATH", "/home")
+        base_path = os.path.abspath(os.getenv("STORAGE_BASE_PATH", "/home"))
 
         # Convert relative path to absolute using base path
         if not os.path.isabs(directory_path):
@@ -43,6 +43,13 @@ def list_files(directory_path: str = ".") -> str:
 
         # Security: Ensure the path is within allowed boundaries
         full_path = os.path.abspath(full_path)
+
+        # Verify the resolved path is still within base_path
+        if not full_path.startswith(base_path):
+            return (
+                f"Error: Access denied. Path '{directory_path}' is outside "
+                "the allowed directory."
+            )
 
         if not os.path.exists(full_path):
             return f"Error: Path '{directory_path}' does not exist."
@@ -95,7 +102,7 @@ def read_file_content(file_path: str, max_lines: int = 50) -> str:
         The file contents or an error message.
     """
     try:
-        base_path = os.getenv("STORAGE_BASE_PATH", "/home")
+        base_path = os.path.abspath(os.getenv("STORAGE_BASE_PATH", "/home"))
 
         # Convert relative path to absolute using base path
         if not os.path.isabs(file_path):
@@ -106,6 +113,13 @@ def read_file_content(file_path: str, max_lines: int = 50) -> str:
         # Security: Ensure the path is within allowed boundaries
         full_path = os.path.abspath(full_path)
 
+        # Verify the resolved path is still within base_path
+        if not full_path.startswith(base_path):
+            return (
+                f"Error: Access denied. Path '{file_path}' is outside "
+                "the allowed directory."
+            )
+
         if not os.path.exists(full_path):
             return f"Error: File '{file_path}' does not exist."
 
@@ -115,15 +129,27 @@ def read_file_content(file_path: str, max_lines: int = 50) -> str:
         # Check file size
         file_size = os.path.getsize(full_path)
         if file_size > 1024 * 1024:  # 1MB limit
-            return f"Error: File is too large ({format_size(file_size)}). Maximum supported size is 1MB."
+            return (
+                f"Error: File is too large ({format_size(file_size)}). "
+                "Maximum supported size is 1MB."
+            )
 
+        # Read file line by line for better memory efficiency
+        lines = []
         with open(full_path, "r", encoding="utf-8", errors="ignore") as f:
-            lines = f.readlines()
+            for i, line in enumerate(f):
+                if i >= max_lines:
+                    break
+                lines.append(line)
 
-        total_lines = len(lines)
+        # Count total lines
+        total_lines = 0
+        with open(full_path, "r", encoding="utf-8", errors="ignore") as f:
+            for _ in f:
+                total_lines += 1
 
         if total_lines > max_lines:
-            content = "".join(lines[:max_lines])
+            content = "".join(lines)
             result = f"File: {file_path}\n"
             result += f"Size: {format_size(file_size)}\n"
             result += f"Showing first {max_lines} of {total_lines} lines:\n\n"
