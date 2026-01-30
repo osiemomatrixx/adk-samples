@@ -18,7 +18,6 @@ This agent answers questions by querying storage systems and computer servers.
 """
 
 import logging
-import os
 
 from dotenv import load_dotenv
 from google.adk.agents import LlmAgent

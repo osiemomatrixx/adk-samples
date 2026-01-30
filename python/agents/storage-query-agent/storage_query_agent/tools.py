@@ -17,8 +17,6 @@
 import os
 import platform
 import shutil
-from pathlib import Path
-from typing import Optional
 
 
 def list_files(directory_path: str = ".") -> str:
@@ -33,7 +31,7 @@ def list_files(directory_path: str = ".") -> str:
     """
     try:
         base_path = os.getenv("STORAGE_BASE_PATH", "/home")
-        
+
         # Convert relative path to absolute using base path
         if not os.path.isabs(directory_path):
             if directory_path == ".":
@@ -45,21 +43,21 @@ def list_files(directory_path: str = ".") -> str:
 
         # Security: Ensure the path is within allowed boundaries
         full_path = os.path.abspath(full_path)
-        
+
         if not os.path.exists(full_path):
             return f"Error: Path '{directory_path}' does not exist."
-        
+
         if not os.path.isdir(full_path):
             return f"Error: '{directory_path}' is not a directory."
-        
+
         items = os.listdir(full_path)
-        
+
         if not items:
             return f"The directory '{directory_path}' is empty."
-        
+
         files = []
         directories = []
-        
+
         for item in sorted(items):
             item_path = os.path.join(full_path, item)
             if os.path.isdir(item_path):
@@ -69,7 +67,7 @@ def list_files(directory_path: str = ".") -> str:
                 size = os.path.getsize(item_path)
                 size_str = format_size(size)
                 files.append(f"📄 {item} ({size_str})")
-        
+
         result = f"Contents of '{directory_path}':\n\n"
         if directories:
             result += "Directories:\n"
@@ -77,7 +75,7 @@ def list_files(directory_path: str = ".") -> str:
         if files:
             result += "Files:\n"
             result += "\n".join(files)
-        
+
         return result
     except PermissionError:
         return f"Error: Permission denied to access '{directory_path}'."
@@ -98,7 +96,7 @@ def read_file_content(file_path: str, max_lines: int = 50) -> str:
     """
     try:
         base_path = os.getenv("STORAGE_BASE_PATH", "/home")
-        
+
         # Convert relative path to absolute using base path
         if not os.path.isabs(file_path):
             full_path = os.path.join(base_path, file_path.lstrip("/"))
@@ -107,23 +105,23 @@ def read_file_content(file_path: str, max_lines: int = 50) -> str:
 
         # Security: Ensure the path is within allowed boundaries
         full_path = os.path.abspath(full_path)
-        
+
         if not os.path.exists(full_path):
             return f"Error: File '{file_path}' does not exist."
-        
+
         if not os.path.isfile(full_path):
             return f"Error: '{file_path}' is not a file."
-        
+
         # Check file size
         file_size = os.path.getsize(full_path)
         if file_size > 1024 * 1024:  # 1MB limit
             return f"Error: File is too large ({format_size(file_size)}). Maximum supported size is 1MB."
-        
+
         with open(full_path, "r", encoding="utf-8", errors="ignore") as f:
             lines = f.readlines()
-        
+
         total_lines = len(lines)
-        
+
         if total_lines > max_lines:
             content = "".join(lines[:max_lines])
             result = f"File: {file_path}\n"
@@ -137,7 +135,7 @@ def read_file_content(file_path: str, max_lines: int = 50) -> str:
             result += f"Size: {format_size(file_size)}\n"
             result += f"Lines: {total_lines}\n\n"
             result += content
-        
+
         return result
     except PermissionError:
         return f"Error: Permission denied to read '{file_path}'."
@@ -160,20 +158,20 @@ def get_storage_info(path: str = "/") -> str:
     try:
         if not os.path.exists(path):
             path = "/"
-        
+
         usage = shutil.disk_usage(path)
-        
+
         total = usage.total
         used = usage.used
         free = usage.free
-        
+
         percent_used = (used / total) * 100 if total > 0 else 0
-        
+
         result = f"Storage Information for '{path}':\n\n"
         result += f"Total Space: {format_size(total)}\n"
         result += f"Used Space: {format_size(used)} ({percent_used:.1f}%)\n"
         result += f"Available Space: {format_size(free)} ({100 - percent_used:.1f}%)\n"
-        
+
         return result
     except Exception as e:
         return f"Error getting storage information: {str(e)}"
@@ -194,7 +192,7 @@ def get_server_info() -> str:
         result += f"Processor: {platform.processor()}\n"
         result += f"Architecture: {platform.machine()}\n"
         result += f"Python Version: {platform.python_version()}\n"
-        
+
         return result
     except Exception as e:
         return f"Error getting server information: {str(e)}"
